@@ -35,7 +35,7 @@ body {
   margin: 10% 0%;
   width: inherit; }
 
-.question {
+.question, .results {
   border: 2px solid black;
   height: 25%;
   width: inherit; }

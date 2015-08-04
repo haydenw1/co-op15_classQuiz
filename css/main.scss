@@ -20,3 +20,7 @@ body {
   height: 25%;
   width: inherit;
 }
+
+.results {
+  @extend .question;
+}
