@@ -24,4 +24,20 @@ body {
   margin: 0;
   padding: 0; }
 
+html,
+body {
+  height: 100%;
+  width: 100%; }
+
+.answer {
+  border: 1px solid red;
+  height: 15%;
+  margin: 10% 0%;
+  width: inherit; }
+
+.question {
+  border: 2px solid black;
+  height: 25%;
+  width: inherit; }
+
 /*# sourceMappingURL=main.css.map */
