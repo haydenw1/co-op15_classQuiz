@@ -35,9 +35,21 @@ body {
   margin: 10% 0%;
   width: inherit; }
 
+.class {
+  background: lightcoral;
+  height: 50px;
+  margin: 25px 0px;
+  width: 100%; }
+
+.classes {
+  border: 1px solid purple; }
+
 .question, .results {
   border: 2px solid black;
   height: 25%;
   width: inherit; }
+
+.results-svg {
+  position: relative; }
 
 /*# sourceMappingURL=main.css.map */

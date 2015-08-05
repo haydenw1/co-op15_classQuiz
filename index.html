@@ -13,11 +13,19 @@
     <script src="js/dpsHTMLGestureAPI.min.js"></script>
     <script src="js/api.js"></script>
     <script src="js/buttons.js"></script>
+
+    <script src="js/main.js"></script>
+
+    <script>
+      api.setUp();
+      buttons.createButtons();
+      quiz.setUp();
+      //description.setUp();
+    </script>
+
     <!-- <script src="js/description.js"></script>-->
 	</head>
 	<body>
-		<script src="js/main.js"></script>
-
 		<!-- <div class="top">
       <h1 class="title">Class Quiz</h1>
       <p class="directions">
@@ -41,12 +49,5 @@
 
     <div class="button nav"><img src="images/back_white.png"/></div>
     <div class="button help"><img src="images/help_white.png"/></div>
-
-		<script>
-			api.setUp();
-      buttons.createButtons();
-      quiz.setUp();
-      //description.setUp();
-		</script>
 	</body>
 </html>

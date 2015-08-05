@@ -15,6 +15,17 @@ body {
   width: inherit;
 }
 
+.class{
+  background: lightcoral;
+  height: 50px;
+  margin: 25px 0px;
+  width: 100%;
+}
+
+.classes {
+  border: 1px solid purple;
+}
+
 .question {
   border: 2px solid black;
   height: 25%;
@@ -23,4 +34,8 @@ body {
 
 .results {
   @extend .question;
+}
+
+.results-svg{
+  position: relative;
 }

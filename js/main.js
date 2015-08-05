@@ -19,18 +19,20 @@ var quiz = {
    *   dynamically size elements, and bind and define event listeners.
    */
   setUp: function(){
-    quiz.meas.width = document.documentElement.clientWidth;
-    quiz.meas.height = document.documentElement.clientHeight;
-    quiz.meas.padding = quiz.meas.width * .08;
+    $( document ).ready(function(){
+      quiz.meas.width = document.documentElement.clientWidth;
+      quiz.meas.height = document.documentElement.clientHeight;
+      quiz.meas.padding = quiz.meas.width * .08;
 
-    quiz.meas.currentQuestion = 0;
-    quiz.elem.questionP = $( "#qP" );
-    quiz.elem.answerPs = $(".answer p");
+      quiz.meas.currentQuestion = 0;
+      quiz.elem.questionP = $( "#qP" );
+      quiz.elem.answerPs = $(".answer p");
 
-    quiz.setBodyPadding();
-    //quiz.makeTools();
-    quiz.useData();
-    quiz.attachListeners();
+      quiz.setBodyPadding();
+      //quiz.makeTools();
+      quiz.useData();
+      quiz.attachListeners();
+    });
   },
 
 
@@ -172,18 +174,91 @@ var quiz = {
     $( ".answer" ).remove();
 
     quiz.elem.questionP.html("Your quiz results:");
+    quiz.meas.qDivStart = $( ".question" ).height();
 
     d3.select(".question")
       //change 'question' class to 'results' class
       .attr("class", "results")
       .transition()
-        .style("height", quiz.meas.height * .5 + "px");
+        .style("height", quiz.meas.height * .4 + "px");
 
-    quiz.elem.resultsDivHeight = quiz.meas.height * .5;
+    quiz.meas.resultsDivHeight = quiz.meas.height * .4;
+
+    console.log(JSON.stringify(quiz.data.answers, null, '\t'));
+    quiz.parseResults();
+    console.log(JSON.stringify(quiz.data.answers, null, '\t'));
 
     quiz.makeResultsGraph();
+    quiz.sortClasses();
+    quiz.addClasses();
 
-    console.log(quiz.data.answers);
+  },
+
+
+
+  parseResults: function(){
+    //var temp = [];
+    var answers = quiz.data.answers;
+
+    //var quiz.data.results = [];
+
+    for(var i = 0; i < answers.length; i++){
+      answers[i].results = answers[i].count / quiz.data.questions.length;
+      //quiz.data.results.push(answers[i].results)
+    }
+
+    for(var i = 0; i < answers.length; i++){
+
+      if(answers[i] && answers[i + 1]){
+        quiz.compare(answers, i, "results");
+      }
+    }
+  },
+
+
+
+  compare: function(arr_obj, index_a, testProperty1, testProperty2){
+    var index_b = index_a + 1;
+    if( index_b > arr_obj.length - 1){
+      return;
+    }
+    console.log(arr_obj[index_a][testProperty1][testProperty2]);
+    //console.log(arr_obj[index_b][testProperty1][testProperty2])
+    console.log(index_a);
+    //console.log(index_b);
+    //console.log(testProperty1);
+    //console.log(testProperty2);
+    console.log(arr_obj[index_a].name);
+    //
+    if(testProperty2){
+      var testA = arr_obj[index_a][testProperty1][testProperty2];
+      var testB = arr_obj[index_b][testProperty1][testProperty2];
+    }else{
+      var testA = arr_obj[index_a][testProperty1];
+      var testB = arr_obj[index_b][testProperty1];
+    }
+
+    //if( arr_obj[index_b][testProperty] > arr_obj[index_a][testProperty] ){
+    //  quiz.swapArrayElements(arr_obj, index_a, index_b);
+    //}
+
+    if( testB > testA ){
+      console.log("swap")
+      quiz.swapArrayElements(arr_obj, index_a, index_b);
+    }
+
+    if(arr_obj[index_a - 1]){
+      console.log("COLESLAW RECURSIVE")
+      quiz.compare(arr_obj, index_a - 1, testProperty1, testProperty2);
+    }
+  },
+
+
+
+  swapArrayElements: function(arr_obj, index_a, index_b){
+    var temp = arr_obj[index_a];
+    arr_obj[index_a] = arr_obj[index_b];
+    arr_obj[index_b] = temp;
   },
 
 
@@ -195,7 +270,7 @@ var quiz = {
    */
   makeResultsGraph: function(){
     var questionPHeight = quiz.elem.questionP.outerHeight(true);
-    var svgHeight = quiz.elem.resultsDivHeight - questionPHeight
+    var svgHeight =  quiz.meas.resultsDivHeight - questionPHeight;
     var resultsDivWidth = $( ".results" ).width();
 
     //varable that will hold xScale for legibility (assigned after 'makeTools()' call)
@@ -208,28 +283,41 @@ var quiz = {
     x = quiz.d3Tools.xScale;
     y = quiz.d3Tools.yScale;
 
-    d3.select(".results")
+    var svg = d3.select(".results")
       .append("svg")
         .attr("class", "results-svg")
         .attr("height", svgHeight)
         .attr("width", resultsDivWidth)
-        .attr("transform", "translate(0," + questionPHeight + ")")
-        .append("g")
-          .attr("class", "results-g")
-          .selectAll("rect")
-          .data(quiz.data.answers)
-          .enter()
-          .append("rect")
-            .attr("x", function(d,i){
-              return x(i);
-            })
-            .attr("y", function(d){
+        .style("top", (- (svgHeight - (quiz.meas.qDivStart - questionPHeight))) + 'px');
+
+    svg.append("g")
+      .attr("class", "results-g")
+      .selectAll("rect")
+      .data(quiz.data.answers)
+      .enter()
+      .append("rect")
+        .attr("x", function(d,i){
+          return x(i);
+        })
+        .attr("y", function(d){
+          return y(1)//y(d.count);
+        })
+        .attr("height", function(d){
+          return svgHeight - y(1);//svgHeight - y(d.count);
+        })
+        .attr("width", x.rangeBand());
+
+    svg.transition()
+     .style("top", 0 + "px");
+
+    svg.selectAll("rect")
+      .transition()
+        .attr("y", function(d){
               return y(d.count);
             })
-            .attr("height", function(d){
-              return svgHeight - y(d.count);
-            })
-            .attr("width", x.rangeBand());
+        .attr("height", function(d){
+          return svgHeight - y(d.count);
+        });
   },
 
 
@@ -250,6 +338,42 @@ var quiz = {
     quiz.d3Tools.yScale = d3.scale.linear()
       .domain([0, 5])
       .range([height, 0]);
+  },
+
+  addClasses: function(){
+    //console.log(quiz.classes);
+    $( "body" ).append( "<div class='classes'></div>" );
+    $( ".classes" ).append( "<p class='cP'>Based on your quiz results we would like to recommend the following electives:</p>");
+
+    d3.select(".classes").selectAll("div")
+      .data(quiz.classes)
+      .enter()
+      .append("div")
+        .attr("class", "class")
+          .append("text")
+            .text(function(d){
+              //console.log(
+              //  "Code: " + d.weights.code +
+              //  " Design: " + d.weights.design +
+              //  " Print: " + d.weights.print
+              //);
+              return d.name;
+            })
+  },
+
+  sortClasses: function(){//dont know if needs to be seperate
+    //console.log(JSON.stringify(quiz.classes, null, '\t'));
+
+    for(var i = 0; i < quiz.classes.length; i++){
+      console.log("SORT");
+      //console.log(JSON.stringify(quiz.classes, null, '\t'));
+      quiz.compare(quiz.classes, i, "weights", quiz.data.answers[0].key);
+    }
+
+    console.log(JSON.stringify(quiz.classes, null, '\t'));
+
+
+
   },
 
 
@@ -275,43 +399,147 @@ var quiz = {
       {
         "question": "Test page 1 question",
         "answers": [
-          {"text": "Test page 1 test answer 2", "key": "print"},
-          {"text": "Test page 1 test answer 1", "key": "design"},
-          {"text": "Test page 1 test answer 3", "key": "code"},
+          {
+            "text": "Test page 1 test answer 2",
+            "key": "print"
+          },
+          {
+            "text": "Test page 1 test answer 1",
+            "key": "design"
+          },
+          {
+            "text": "Test page 1 test answer 3",
+            "key": "code"
+          }
         ]
       },
       {
         "question": "Test page 2 question",
         "answers": [
-          {"text": "Test page 2 test answer 1", "key": "design"},
-          {"text": "Test page 2 test answer 2", "key": "print"},
-          {"text": "Test page 2 test answer 3", "key": "code"},
+          {
+            "text": "Test page 2 test answer 1",
+            "key": "design"
+          },
+          {
+            "text": "Test page 2 test answer 2",
+            "key": "print"
+          },
+          {
+            "text": "Test page 2 test answer 3",
+            "key": "code"
+          }
         ]
       },
       {
         "question": "Test page 3 question",
         "answers": [
-          {"text": "Test page 3 test answer 2", "key": "print"},
-          {"text": "Test page 3 test answer 1", "key": "design"},
-          {"text": "Test page 3 test answer 3", "key": "code"},
+          {
+            "text": "Test page 3 test answer 2",
+            "key": "print"
+          },
+          {
+            "text": "Test page 3 test answer 1",
+            "key": "design"
+          },
+          {
+            "text": "Test page 3 test answer 3",
+            "key": "code"
+          }
         ]
       },
       {
         "question": "Test page 4 question",
         "answers": [
-          {"text": "Test page 4 test answer 3", "key": "code"},
-          {"text": "Test page 4 test answer 1", "key": "design"},
-          {"text": "Test page 4 test answer 2", "key": "print"},
+          {
+            "text": "Test page 4 test answer 3",
+            "key": "code"
+          },
+          {
+            "text": "Test page 4 test answer 1",
+            "key": "design"
+          },
+          {
+            "text": "Test page 4 test answer 2",
+            "key": "print"
+          }
         ]
       },
       {
         "question": "Test page 5 question",
         "answers": [
-          {"text": "Test page 5 test answer 3", "key": "code"},
-          {"text": "Test page 5 test answer 2", "key": "print"},
-          {"text": "Test page 5 test answer 1", "key": "design"},
+          {
+            "text": "Test page 5 test answer 3",
+            "key": "code"
+          },
+          {
+            "text": "Test page 5 test answer 2",
+            "key": "print"
+          },
+          {
+            "text": "Test page 5 test answer 1",
+            "key": "design"
+          }
         ]
-      },
+      }
     ]
-  }
+  },
+
+  classes: [
+    {
+      "name": "Cross Media Publishing",
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "name": "Foundations",
+      "weights": {
+        "code": .15,
+        "design": .50,
+        "print": .35,
+      }
+    },
+    {
+      "name": "Web Page 1",
+      "weights": {
+        "code": .85,
+        "design": .15,
+        "print": .0,
+      }
+    },
+    {
+      "name": "Typo and Page Design",
+      "weights": {
+        "code": .0,
+        "design": .90,
+        "print": .10,
+      }
+    },
+    {
+      "name": "Imaging",
+      "weights": {
+        "code": .0,
+        "design": .75,
+        "print": .25,
+      }
+    },
+    {
+      "name": "Design Production",
+      "weights": {
+        "code": .0,
+        "design": .80,
+        "print": .20,
+      }
+    },
+    {
+      "name": "Database Publishing",
+      "weights": {
+        "code": .33, //?????????????????
+        "design": .34, //?????????????????
+        "print": .33, //?????????????????
+      }
+    }
+  ]
 }
