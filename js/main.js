@@ -26,13 +26,17 @@ var quiz = {
 
       quiz.meas.currentQuestion = 0;
       quiz.elem.questionP = $( "#qP" );
-      quiz.elem.answerPs = $(".answer p");
+      quiz.elem.answerPs = $( ".answer p" );
+      quiz.elem.userTitle = $( ".title" );
+      quiz.elem.titleDesc = $( ".title-description" );
 
       quiz.setBodyPadding();
       //quiz.makeTools();
       quiz.useData();
       quiz.attachListeners();
     });
+
+
   },
 
 
@@ -173,182 +177,84 @@ var quiz = {
   showResults: function(){
     $( ".answer" ).remove();
 
-    quiz.elem.questionP.html("Your quiz results:");
+    quiz.elem.questionP.html("Based on your answers we find you are a");
     quiz.meas.qDivStart = $( ".question" ).height();
 
     d3.select(".question")
       //change 'question' class to 'results' class
       .attr("class", "results")
       .transition()
-        .style("height", quiz.meas.height * .4 + "px");
+        .style("height", 30+"px");
+
+    quiz.elem.userTitle.html("Media Strategist");
+    quiz.elem.titleDesc.html("Students who fit into the media strategist category usually excel in business and management, as well as overall knowledge of media industries where a management level approach is needed.");
 
     quiz.meas.resultsDivHeight = quiz.meas.height * .4;
 
-    console.log(JSON.stringify(quiz.data.answers, null, '\t'));
-    quiz.parseResults();
-    console.log(JSON.stringify(quiz.data.answers, null, '\t'));
+    //console.log(JSON.stringify(quiz.data.answers, null, '\t'));
+    //quiz.parseResults();
+    //console.log(JSON.stringify(quiz.data.answers, null, '\t'));
 
-    quiz.makeResultsGraph();
+    quiz.parseResults();
     //quiz.sortClasses();
     quiz.addClasses();
+
+
 
   },
 
 
 
   parseResults: function(){
-    //var temp = [];
     var answers = quiz.data.answers;
+    var classes = quiz.classes;
 
-    //var quiz.data.results = [];
+    //console.log(JSON.stringify(answers, null, '\t'));
+    quiz.bubbleSort(answers, "count");
+    //console.log(JSON.stringify(answers, null, '\t'));
 
-    for(var i = 0; i < answers.length; i++){
-      answers[i].results = answers[i].count / quiz.data.questions.length;
-      //quiz.data.results.push(answers[i].results)
+    for( var i = 0; i < answers.length; i++ ){
+      answers[i].val = (i + 1);
     }
 
-    for(var i = 0; i < answers.length; i++){
+    for( var a = 0; a < classes.length; a++ ){
+      classes[a].userWeight = quiz.setUserWeight(classes[a]);
+    }
 
-      if(answers[i] && answers[i + 1]){
-        quiz.compare(answers, i, "results");
+    quiz.bubbleSort(classes, "userWeight");
+
+    classes.reverse();
+    quiz.classes = classes.splice(0, 5);
+    console.log("coleslaw");
+  },
+
+
+
+  setUserWeight: function(classObj){
+    var codeVal;
+    var designVal;
+    var mgmtVal;
+    var printVal;
+
+    for ( i = 0; i < quiz.data.answers.length; i++ ){
+      temp = quiz.data.answers[i];
+
+      if ( temp.key == "code" ){
+        codeVal = temp.val;
+      }else if ( temp.key == "design" ){
+        designVal = temp.val;
+      }else if ( temp.key == "mgmt" ){
+        mgmtVal = temp.val;
+      }else{
+        printVal = temp.val;
       }
     }
+
+    return ( +(( classObj.weights.code * codeVal ) + ( classObj.weights.design * designVal ) + ( classObj.weights.mgmt * mgmtVal ) + ( classObj.weights.print * printVal )).toFixed(2) );
   },
 
-/*
-
-  compare: function(arr_obj, index_a, testProperty1, testProperty2){
-    var index_b = index_a + 1;
-    var swapped = false;
-    if( index_b > arr_obj.length - 1){
-      return;
-    }
-
-    if(testProperty2){
-      var testA = arr_obj[index_a][testProperty1][testProperty2];
-      var testB = arr_obj[index_b][testProperty1][testProperty2];
-    }else{
-      var testA = arr_obj[index_a][testProperty1];
-      var testB = arr_obj[index_b][testProperty1];
-    }
-
-    if( testB > testA ){
-      quiz.swapArrayElements(arr_obj, index_a, index_b);
-      swapped = true;
-    }
-
-    if(arr_obj[index_a - 1] && swapped){
-      quiz.compare(arr_obj, index_a - 1, testProperty1, testProperty2);
-    }
-  },
-
-
-
-  swapArrayElements: function(arr_obj, index_a, index_b){
-    var temp = arr_obj[index_a];
-    arr_obj[index_a] = arr_obj[index_b];
-    arr_obj[index_b] = temp;
-  },
-
-*/
-
-
-
-
-
-
-
-
-
-  /**
-   * makeResultsGraph
-   *  D3, makes a vis (maybe bar graph right now) that is simple and displays the
-   *  results of the users answers based on the 'key' or category of the answers.
-   */
-
-  /*
-  makeResultsGraph: function(){
-    var questionPHeight = quiz.elem.questionP.outerHeight(true);
-    var svgHeight =  quiz.meas.resultsDivHeight - questionPHeight;
-    var resultsDivWidth = $( ".results" ).width();
-
-    //varable that will hold xScale for legibility (assigned after 'makeTools()' call)
-    var x;
-
-    //varable that will hold yScale for legibility (assigned after 'makeTools()' call)
-    var y;
-
-    quiz.makeTools(resultsDivWidth, svgHeight);
-    x = quiz.d3Tools.xScale;
-    y = quiz.d3Tools.yScale;
-
-    var svg = d3.select(".results")
-      .append("svg")
-        .attr("class", "results-svg")
-        .attr("height", svgHeight)
-        .attr("width", resultsDivWidth)
-        .style("top", (- (svgHeight - (quiz.meas.qDivStart - questionPHeight))) + 'px');
-
-    svg.append("g")
-      .attr("class", "results-g")
-      .selectAll("rect")
-      .data(quiz.data.answers)
-      .enter()
-      .append("rect")
-        .attr("x", function(d,i){
-          return x(i);
-        })
-        .attr("y", function(d){
-          return y(1)//y(d.count);
-        })
-        .attr("height", function(d){
-          return svgHeight - y(1);//svgHeight - y(d.count);
-        })
-        .attr("width", x.rangeBand());
-
-    svg.transition()
-     .style("top", 0 + "px");
-
-    svg.selectAll("rect")
-      .transition()
-        .attr("y", function(d){
-          return y(d.count);
-        })
-        .attr("height", function(d){
-          return svgHeight - y(d.count);
-        });
-  },
-
-*/
-
-
-
-  /**
-   * makeTools
-   *   Function to create any d3 tools that don't to access the data yet (scales,
-   *   axises, etc.)
-   *
-   * @param width {number} - width of svg that vis will need to be scaled to fit
-   * @param height {number} - height of svg that vis will need to be scaled to fit
-   */
-
-  /*
-
-
-  makeTools: function(width, height){
-    quiz.d3Tools.xScale = d3.scale.ordinal()
-      .domain([0, 1, 2])
-      .rangeRoundBands([0, width], .2);
-
-    quiz.d3Tools.yScale = d3.scale.linear()
-      .domain([0, 5])
-      .range([height, 0]);
-  },
-
-  */
 
   addClasses: function(){
-    //console.log(quiz.classes);
     $( "body" ).append( "<div class='classes'></div>" );
     $( ".classes" ).append( "<p class='cP'>Based on your quiz results we would like to recommend the following electives:</p>");
 
@@ -364,11 +270,6 @@ var quiz = {
 
     textDiv.append("text")
       .text(function(d){
-        //console.log(
-        //  "Code: " + d.weights.code +
-        //  " Design: " + d.weights.design +
-        //  " Print: " + d.weights.print
-        //);
         return d.title;
       })
 
@@ -381,23 +282,43 @@ var quiz = {
       .duration(750)
       .delay(function(d, i){ return (i - 1) * 150;})
       .style("left", "0%");
-
-
   },
 
+
+/*
   sortClasses: function(){//dont know if needs to be seperate
     //console.log(JSON.stringify(quiz.classes, null, '\t'));
 
     for(var i = 0; i < quiz.classes.length; i++){
-      console.log("SORT");
+      //console.log("SORT");
       //console.log(JSON.stringify(quiz.classes, null, '\t'));
       quiz.compare(quiz.classes, i, "weights", quiz.data.answers[0].key);
     }
 
-    console.log(JSON.stringify(quiz.classes, null, '\t'));
+    //console.log(JSON.stringify(quiz.classes, null, '\t'));
   },
 
+*/
 
+
+  bubbleSort: function(arr, prop){
+      console.log(arr);
+      console.log(prop);
+      console.log(arr[0][prop]);
+      var swapped;
+      do {
+          swapped = false;
+          for ( var i = 0; i < arr.length - 1; i++ ) {
+              if ( arr[i][prop] > arr[i+1][prop] ) {
+                  var temp = arr[i];
+
+                  arr[i] = arr[i+1];
+                  arr[i+1] = temp;
+                  swapped = true;
+              }
+          }
+      } while (swapped);
+  },
 
   //main data object that holds the questions for the user and the user's answers
   data: {
@@ -515,233 +436,259 @@ var quiz = {
       "courseno": 246,
       "weights": {
         "code": .15,
-        "design": .70,
+        "design": .65,
         "print": .15,
+        "mgmt": .05
       }
     },
     {
       "title": "Advanced Workflow",
       "courseno": 266,
       "weights": {
-        "code": .60,
+        "code": .40,
         "design": .10,
         "print": .30,
+        "mgmt": .20
       }
     },
     {
       "title": "Digital Asset Management",
       "courseno": 336,
       "weights": {
-        "code": .75,
-        "design": .10,
+        "code": .60,
+        "design": .05,
         "print": .15,
+        "mgmt": .20
       }
     },
     {
       "title": "Media Law",
       "courseno": 355,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .00,
+        "print": .10,
+        "mgmt": .90
       }
     },
     {
       "title": "Multimedia Strategies",
       "courseno": 356,
       "weights": {
-        "code": .75,
+        "code": .15,
         "design": .10,
         "print": .15,
+        "mgmt": .60
       }
     },
     {
       "title": "Media Distribution & Transmission",
       "courseno": 359,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .05,
+        "design": .05,
+        "print": .10,
+        "mgmt": .80
       }
     },
     {
       "title": "Digital Print Processes",
       "courseno": 361,
       "weights": {
-        "code": .75,
+        "code": .05,
         "design": .10,
-        "print": .15,
+        "print": .75,
+        "mgmt": .10
       }
     },
     {
       "title": "Media Industries Analysis",
       "courseno": 363,
       "weights": {
-        "code": .75,
-        "design": .10,
+        "code": .00,
+        "design": .05,
         "print": .15,
+        "mgmt": .80
       }
     },
     {
       "title": "Digital News Systems Management",
       "courseno": 364,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .25,
+        "design": .25,
+        "print": .25,
+        "mgmt": .25
       }
     },
     {
       "title": "Introduction to Book Design",
       "courseno": 366,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .05,
+        "design": .65,
+        "print": .20,
+        "mgmt": .10
       }
     },
     {
       "title": "Image Processing Workflow",
       "courseno": 367,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .80,
+        "print": .20,
+        "mgmt": .00
       }
     },
     {
       "title": "Gravure and Flexography",
       "courseno": 368,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .05,
+        "print": .80,
+        "mgmt": .15
       }
     },
     {
       "title": "Bookbinding",
       "courseno": 369,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .45,
+        "print": .45,
+        "mgmt": .10
       }
     },
     {
       "title": "Print Finishing Management",
       "courseno": 371,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .15,
+        "print": .55,
+        "mgmt": .30
       }
     },
     {
       "title": "Lithographic Process",
       "courseno": 376,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .15,
+        "print": .80,
+        "mgmt": .05
       }
     },
     {
       "title": "Advanced Retouching & Restoration",
       "courseno": 377,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .85,
+        "print": .10,
+        "mgmt": .05
       }
     },
     {
       "title": "3D Printing Workflow",
       "courseno": 386,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .25,
+        "design": .35,
+        "print": .40,
+        "mgmt": .00
       }
     },
     {
       "title": "Printing Process Control",
       "courseno": 457,
       "weights": {
-        "code": .75,
+        "code": .10,
         "design": .10,
-        "print": .15,
+        "print": .55,
+        "mgmt": .25
       }
     },
     {
       "title": "Operations Management in the GA",
       "courseno": 503,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .20,
+        "print": .10,
+        "mgmt": .70
       }
     },
     {
       "title": "Limited Edition Print",
       "courseno": 543,
       "weights": {
-        "code": .75,
+        "code": .00,
         "design": .10,
-        "print": .15,
+        "print": .90,
+        "mgmt": .00
       }
     },
     {
       "title": "Color Management Systems",
       "courseno": 544,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .10,
+        "design": .30,
+        "print": .30,
+        "mgmt": .30
       }
     },
     {
       "title": "Sustainability in GA",
       "courseno": 550,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": 00,
+        "design": .25,
+        "print": .10,
+        "mgmt": .65
       }
     },
     {
       "title": "Package Printing",
       "courseno": 558,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .30,
+        "print": .50,
+        "mgmt": .20
       }
     },
     {
       "title": "Industry Issues & Trends",
       "courseno": 561,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .10,
+        "design": .20,
+        "print": .30,
+        "mgmt": .40
       }
     },
     {
       "title": "Estimating Practice",
       "courseno": 563,
       "weights": {
-        "code": .75,
+        "code": .10,
         "design": .10,
-        "print": .15,
+        "print": .40,
+        "mgmt": .40
       }
     },
     {
       "title": "Typography Research",
       "courseno": 566,
       "weights": {
-        "code": .75,
-        "design": .10,
-        "print": .15,
+        "code": .00,
+        "design": .60,
+        "print": .10,
+        "mgmt": .30
       }
     }
   ]
