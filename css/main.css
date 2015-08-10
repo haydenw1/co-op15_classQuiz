@@ -27,25 +27,27 @@ body {
 html,
 body {
   height: 100%;
-  width: 100%; }
+  width: 100%;
+  overflow-x: hidden; }
 
 .answer {
-  border: 1px solid red;
+  background: lightcoral;
   height: 15%;
   margin: 10% 0%;
   width: inherit; }
 
 .class {
   background: lightcoral;
-  height: 50px;
   margin: 25px 0px;
-  width: 100%; }
-
-.classes {
-  border: 1px solid purple; }
+  padding: 5%;
+  position: relative;
+  width: 90%; }
+  .class text {
+    width: 100%;
+    display: block; }
 
 .question, .results {
-  border: 2px solid black;
+  background: lightcoral;
   height: 25%;
   width: inherit; }
 

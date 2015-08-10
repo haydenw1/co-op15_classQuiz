@@ -189,7 +189,7 @@ var quiz = {
     console.log(JSON.stringify(quiz.data.answers, null, '\t'));
 
     quiz.makeResultsGraph();
-    quiz.sortClasses();
+    //quiz.sortClasses();
     quiz.addClasses();
 
   },
@@ -215,21 +215,15 @@ var quiz = {
     }
   },
 
-
+/*
 
   compare: function(arr_obj, index_a, testProperty1, testProperty2){
     var index_b = index_a + 1;
+    var swapped = false;
     if( index_b > arr_obj.length - 1){
       return;
     }
-    console.log(arr_obj[index_a][testProperty1][testProperty2]);
-    //console.log(arr_obj[index_b][testProperty1][testProperty2])
-    console.log(index_a);
-    //console.log(index_b);
-    //console.log(testProperty1);
-    //console.log(testProperty2);
-    console.log(arr_obj[index_a].name);
-    //
+
     if(testProperty2){
       var testA = arr_obj[index_a][testProperty1][testProperty2];
       var testB = arr_obj[index_b][testProperty1][testProperty2];
@@ -238,17 +232,12 @@ var quiz = {
       var testB = arr_obj[index_b][testProperty1];
     }
 
-    //if( arr_obj[index_b][testProperty] > arr_obj[index_a][testProperty] ){
-    //  quiz.swapArrayElements(arr_obj, index_a, index_b);
-    //}
-
     if( testB > testA ){
-      console.log("swap")
       quiz.swapArrayElements(arr_obj, index_a, index_b);
+      swapped = true;
     }
 
-    if(arr_obj[index_a - 1]){
-      console.log("COLESLAW RECURSIVE")
+    if(arr_obj[index_a - 1] && swapped){
       quiz.compare(arr_obj, index_a - 1, testProperty1, testProperty2);
     }
   },
@@ -261,6 +250,14 @@ var quiz = {
     arr_obj[index_b] = temp;
   },
 
+*/
+
+
+
+
+
+
+
 
 
   /**
@@ -268,6 +265,8 @@ var quiz = {
    *  D3, makes a vis (maybe bar graph right now) that is simple and displays the
    *  results of the users answers based on the 'key' or category of the answers.
    */
+
+  /*
   makeResultsGraph: function(){
     var questionPHeight = quiz.elem.questionP.outerHeight(true);
     var svgHeight =  quiz.meas.resultsDivHeight - questionPHeight;
@@ -313,12 +312,14 @@ var quiz = {
     svg.selectAll("rect")
       .transition()
         .attr("y", function(d){
-              return y(d.count);
-            })
+          return y(d.count);
+        })
         .attr("height", function(d){
           return svgHeight - y(d.count);
         });
   },
+
+*/
 
 
 
@@ -330,6 +331,10 @@ var quiz = {
    * @param width {number} - width of svg that vis will need to be scaled to fit
    * @param height {number} - height of svg that vis will need to be scaled to fit
    */
+
+  /*
+
+
   makeTools: function(width, height){
     quiz.d3Tools.xScale = d3.scale.ordinal()
       .domain([0, 1, 2])
@@ -340,25 +345,44 @@ var quiz = {
       .range([height, 0]);
   },
 
+  */
+
   addClasses: function(){
     //console.log(quiz.classes);
     $( "body" ).append( "<div class='classes'></div>" );
     $( ".classes" ).append( "<p class='cP'>Based on your quiz results we would like to recommend the following electives:</p>");
 
-    d3.select(".classes").selectAll("div")
+
+
+    var textDiv = d3.select(".classes")
+      .selectAll("div")
       .data(quiz.classes)
       .enter()
       .append("div")
         .attr("class", "class")
-          .append("text")
-            .text(function(d){
-              //console.log(
-              //  "Code: " + d.weights.code +
-              //  " Design: " + d.weights.design +
-              //  " Print: " + d.weights.print
-              //);
-              return d.name;
-            })
+        .style("left", "calc(100% + " + (quiz.meas.padding + 1) + "px)") //plus one is quick fix for parent border...take out later
+
+    textDiv.append("text")
+      .text(function(d){
+        //console.log(
+        //  "Code: " + d.weights.code +
+        //  " Design: " + d.weights.design +
+        //  " Print: " + d.weights.print
+        //);
+        return d.title;
+      })
+
+    textDiv.append("text")
+      .text(function(d){
+        return "MAAT-" + d.courseno;
+      })
+
+    textDiv.transition("ease")
+      .duration(750)
+      .delay(function(d, i){ return (i - 1) * 150;})
+      .style("left", "0%");
+
+
   },
 
   sortClasses: function(){//dont know if needs to be seperate
@@ -371,9 +395,6 @@ var quiz = {
     }
 
     console.log(JSON.stringify(quiz.classes, null, '\t'));
-
-
-
   },
 
 
@@ -388,6 +409,10 @@ var quiz = {
       {
         "count": 0,
         "key": "design"
+      },
+      {
+        "count": 0,
+        "key": "mgmt"
       },
       {
         "count": 0,
@@ -486,7 +511,26 @@ var quiz = {
 
   classes: [
     {
-      "name": "Cross Media Publishing",
+      "title": "Magazine Publishing",
+      "courseno": 246,
+      "weights": {
+        "code": .15,
+        "design": .70,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Advanced Workflow",
+      "courseno": 266,
+      "weights": {
+        "code": .60,
+        "design": .10,
+        "print": .30,
+      }
+    },
+    {
+      "title": "Digital Asset Management",
+      "courseno": 336,
       "weights": {
         "code": .75,
         "design": .10,
@@ -494,51 +538,210 @@ var quiz = {
       }
     },
     {
-      "name": "Foundations",
+      "title": "Media Law",
+      "courseno": 355,
       "weights": {
-        "code": .15,
-        "design": .50,
-        "print": .35,
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     },
     {
-      "name": "Web Page 1",
+      "title": "Multimedia Strategies",
+      "courseno": 356,
       "weights": {
-        "code": .85,
-        "design": .15,
-        "print": .0,
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     },
     {
-      "name": "Typo and Page Design",
+      "title": "Media Distribution & Transmission",
+      "courseno": 359,
       "weights": {
-        "code": .0,
-        "design": .90,
-        "print": .10,
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     },
     {
-      "name": "Imaging",
+      "title": "Digital Print Processes",
+      "courseno": 361,
       "weights": {
-        "code": .0,
-        "design": .75,
-        "print": .25,
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     },
     {
-      "name": "Design Production",
+      "title": "Media Industries Analysis",
+      "courseno": 363,
       "weights": {
-        "code": .0,
-        "design": .80,
-        "print": .20,
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     },
     {
-      "name": "Database Publishing",
+      "title": "Digital News Systems Management",
+      "courseno": 364,
       "weights": {
-        "code": .33, //?????????????????
-        "design": .34, //?????????????????
-        "print": .33, //?????????????????
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Introduction to Book Design",
+      "courseno": 366,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Image Processing Workflow",
+      "courseno": 367,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Gravure and Flexography",
+      "courseno": 368,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Bookbinding",
+      "courseno": 369,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Print Finishing Management",
+      "courseno": 371,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Lithographic Process",
+      "courseno": 376,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Advanced Retouching & Restoration",
+      "courseno": 377,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "3D Printing Workflow",
+      "courseno": 386,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Printing Process Control",
+      "courseno": 457,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Operations Management in the GA",
+      "courseno": 503,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Limited Edition Print",
+      "courseno": 543,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Color Management Systems",
+      "courseno": 544,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Sustainability in GA",
+      "courseno": 550,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Package Printing",
+      "courseno": 558,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Industry Issues & Trends",
+      "courseno": 561,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Estimating Practice",
+      "courseno": 563,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
+      }
+    },
+    {
+      "title": "Typography Research",
+      "courseno": 566,
+      "weights": {
+        "code": .75,
+        "design": .10,
+        "print": .15,
       }
     }
   ]
